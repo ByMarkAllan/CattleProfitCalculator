@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#F7F7F4">
+  <title>Cattle Profit Calculator | RanchAssist™</title>
+  <style>
+    :root {
+      --ra-black:#0A0A09;--ra-gray-950:#171715;--ra-gray-900:#242422;--ra-gray-800:#353532;
+      --ra-gray-700:#4D4D48;--ra-gray-600:#666660;--ra-gray-500:#81817A;--ra-gray-400:#A2A29A;
+      --ra-gray-300:#C5C5BD;--ra-gray-200:#DEDED8;--ra-gray-100:#EEEEEA;--ra-gray-50:#F7F7F4;
+      --ra-white:#FFFFFF;--ra-surface-soft:#F1F1ED;--ra-green:#4C6752;--ra-green-soft:#E7EEE8;
+      --ra-warning:#A16C32;--ra-warning-soft:#F4ECE1;--ra-danger:#B44845;--ra-danger-soft:#F5E6E5;
+      --ra-info:#536C80;--radius-sm:6px;--radius-md:8px;--radius-lg:12px;--shadow:0 1px 2px rgba(10,10,9,.04),0 8px 24px rgba(10,10,9,.06);
+    }
+    *{box-sizing:border-box}
+    html{background:var(--ra-gray-50);color:var(--ra-gray-950);font-family:"Geist","Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    body{margin:0;min-width:320px;background:var(--ra-gray-50)}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    button:disabled{cursor:not-allowed;opacity:.52}
+    :focus-visible{outline:2px solid var(--ra-black);outline-offset:2px}
+    .app{min-height:100vh}
+    .topbar{position:sticky;top:0;z-index:30;background:rgba(247,247,244,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--ra-gray-200)}
+    .topbar-inner{max-width:1360px;margin:auto;padding:12px 32px;display:flex;align-items:center;gap:18px;justify-content:space-between}
+    .brandline{display:flex;align-items:center;min-width:0;gap:10px;font-size:14px;font-weight:650;white-space:nowrap}
+    .brandline .brand{letter-spacing:.055em;font-weight:750}
+    .brandline .slash{color:var(--ra-gray-400)}
+    .brandline .tool{overflow:hidden;text-overflow:ellipsis;color:var(--ra-gray-700)}
+    .menu-row{display:flex;gap:8px;align-items:center}
+    .menu{position:relative}
+    .menu>button,.btn{min-height:42px;padding:0 13px;border:1px solid var(--ra-gray-300);border-radius:7px;background:var(--ra-white);color:var(--ra-gray-950);font-weight:620;font-size:13px}
+    .btn.primary{background:var(--ra-black);color:white;border-color:var(--ra-black)}
+    .btn.tertiary{border-color:transparent;background:transparent;padding-inline:8px}
+    .btn.danger{color:var(--ra-danger);border-color:#DDB6B4}
+    .menu-panel{display:none;position:absolute;right:0;top:calc(100% + 7px);width:210px;background:white;border:1px solid var(--ra-gray-200);border-radius:10px;box-shadow:var(--shadow);padding:6px;z-index:50}
+    .menu.open .menu-panel{display:block}
+    .menu-panel button{width:100%;min-height:42px;text-align:left;border:0;border-radius:6px;background:white;padding:8px 10px;font-size:13px;color:var(--ra-gray-950)}
+    .menu-panel button:hover{background:var(--ra-surface-soft)}
+    .menu-panel .danger-item{color:var(--ra-danger)}
+    .page{max-width:1360px;margin:auto;padding:42px 32px 70px}
+    .intro{display:flex;justify-content:space-between;gap:24px;align-items:end;margin-bottom:24px}
+    .eyebrow{font-size:11px;font-weight:750;letter-spacing:.105em;color:var(--ra-gray-600);text-transform:uppercase;margin-bottom:7px}
+    h1{font-size:clamp(30px,4vw,42px);line-height:1.04;letter-spacing:-.035em;margin:0 0 10px;font-weight:650}
+    .lede{max-width:760px;font-size:16px;line-height:1.55;color:var(--ra-gray-600);margin:0}
+    .status-group{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+    .status-pill{display:inline-flex;gap:7px;align-items:center;border:1px solid var(--ra-gray-200);border-radius:999px;padding:7px 10px;background:white;font-size:12px;color:var(--ra-gray-700)}
+    .dot{width:7px;height:7px;border-radius:50%;background:var(--ra-warning)}
+    .status-pill.saved .dot{background:var(--ra-green)}
+    .session-note{border:1px solid var(--ra-gray-200);background:var(--ra-white);border-radius:10px;padding:13px 15px;margin-bottom:24px;display:flex;gap:12px;align-items:flex-start;font-size:13px;line-height:1.45;color:var(--ra-gray-700)}
+    .session-note strong{color:var(--ra-gray-950)}
+    .workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(420px,.94fr);gap:20px;align-items:start}
+    .panel{background:white;border:1px solid var(--ra-gray-200);border-radius:12px;overflow:hidden}
+    .panel-head{padding:18px 20px;border-bottom:1px solid var(--ra-gray-200);display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .panel-head h2{font-size:18px;margin:0;letter-spacing:-.01em}
+    .panel-body{padding:20px}
+    .project-row{display:grid;grid-template-columns:1.25fr .75fr;gap:12px;margin-bottom:18px}
+    .field{min-width:0}
+    .field label{display:flex;justify-content:space-between;gap:8px;margin-bottom:7px;font-size:13px;font-weight:630;color:var(--ra-gray-800)}
+    .field .meta{font-size:10px;color:var(--ra-gray-500);font-weight:750;letter-spacing:.08em;text-transform:uppercase}
+    .field input,.field select,.field textarea{width:100%;border:1px solid #CFCFC8;border-radius:7px;background:#fff;color:var(--ra-gray-950);min-height:44px;padding:9px 11px;font-size:14px}
+    .field input[type=number]{font-variant-numeric:tabular-nums}
+    .field textarea{min-height:94px;resize:vertical;line-height:1.45}
+    .field .help{font-size:12px;line-height:1.4;color:var(--ra-gray-600);margin-top:6px}
+    .scenario-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 20px}
+    .scenario-tab{min-height:46px;border:1px solid var(--ra-gray-200);background:white;border-radius:8px;padding:8px 10px;text-align:left;min-width:0}
+    .scenario-tab.active{border-color:var(--ra-black);box-shadow:inset 0 0 0 1px var(--ra-black)}
+    .scenario-tab .scenario-kicker{display:block;font-size:10px;color:var(--ra-gray-500);text-transform:uppercase;letter-spacing:.08em;font-weight:750}
+    .scenario-tab .scenario-name{display:block;font-size:13px;font-weight:650;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .mode-switch{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-bottom:22px}
+    .mode-btn{border:1px solid var(--ra-gray-200);background:var(--ra-gray-50);border-radius:8px;min-height:48px;padding:8px;font-size:12px;line-height:1.2;font-weight:650}
+    .mode-btn.active{background:var(--ra-black);border-color:var(--ra-black);color:white}
+    .step{border-top:1px solid var(--ra-gray-200);padding-top:20px;margin-top:20px}
+    .step:first-of-type{border-top:0;padding-top:0;margin-top:0}
+    .step-title{display:flex;align-items:start;justify-content:space-between;gap:12px;margin-bottom:14px}
+    .step-title h3{font-size:16px;margin:0}
+    .step-number{font-size:11px;color:var(--ra-gray-500);font-weight:750;letter-spacing:.08em;text-transform:uppercase}
+    .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 12px}
+    .field.full{grid-column:1/-1}
+    .unit-wrap{display:grid;grid-template-columns:minmax(0,1fr) auto}
+    .unit-wrap input{border-radius:7px 0 0 7px}
+    .unit{min-width:58px;border:1px solid #CFCFC8;border-left:0;border-radius:0 7px 7px 0;background:var(--ra-surface-soft);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--ra-gray-600);padding:0 9px}
+    details.advanced{border-top:1px solid var(--ra-gray-200);margin-top:20px;padding-top:10px}
+    details.advanced>summary{list-style:none;cursor:pointer;font-size:14px;font-weight:650;display:flex;justify-content:space-between;align-items:center;min-height:44px}
+    details.advanced>summary::-webkit-details-marker{display:none}
+    details.advanced>summary::after{content:'+';font-size:20px;font-weight:400}
+    details.advanced[open]>summary::after{content:'−'}
+    .advanced-content{padding-top:12px}
+    .assumption{display:inline-flex;border-radius:999px;background:var(--ra-warning-soft);color:#81552A;padding:3px 7px;font-size:10px;font-weight:750;letter-spacing:.06em;text-transform:uppercase}
+    .warning{border:1px solid #E2C8A8;background:var(--ra-warning-soft);border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.45;color:#70491F;margin-top:14px}
+    .validation{display:none;border:1px solid #E3BDBB;background:var(--ra-danger-soft);color:#843835;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.45;margin-bottom:14px}
+    .validation.show{display:block}
+    .results-panel{position:sticky;top:78px}
+    .result-hero{padding:22px 20px 18px;border-bottom:1px solid var(--ra-gray-200)}
+    .hero-label{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ra-gray-600);font-weight:750}
+    .hero-value{font-size:clamp(36px,5vw,52px);font-weight:680;line-height:1.05;letter-spacing:-.045em;font-variant-numeric:tabular-nums;margin-top:5px;overflow-wrap:anywhere}
+    .hero-value.positive{color:var(--ra-green)}
+    .hero-value.negative{color:var(--ra-danger)}
+    .hero-context{font-size:13px;color:var(--ra-gray-600);margin-top:6px}
+    .metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-bottom:1px solid var(--ra-gray-200)}
+    .metric{padding:16px 18px;border-right:1px solid var(--ra-gray-200);border-bottom:1px solid var(--ra-gray-200);min-width:0}
+    .metric:nth-child(2n){border-right:0}
+    .metric:nth-last-child(-n+2){border-bottom:0}
+    .metric-label{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--ra-gray-600);font-weight:750}
+    .metric-value{font-size:26px;line-height:1.15;font-weight:650;letter-spacing:-.03em;margin-top:5px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+    .metric-note{font-size:11px;color:var(--ra-gray-500);margin-top:3px}
+    .result-section{padding:18px 20px;border-bottom:1px solid var(--ra-gray-200)}
+    .result-section:last-child{border-bottom:0}
+    .section-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:13px}
+    .section-row h3{font-size:14px;margin:0}
+    .bar-set{display:grid;gap:12px}
+    .bar-label{display:flex;justify-content:space-between;gap:12px;font-size:12px;margin-bottom:5px;color:var(--ra-gray-700)}
+    .bar-track{height:9px;border-radius:999px;background:var(--ra-gray-100);overflow:hidden}
+    .bar-fill{height:100%;border-radius:inherit;background:var(--ra-gray-800);transition:width 180ms cubic-bezier(.2,.8,.2,1)}
+    .bar-fill.revenue{background:var(--ra-green)}
+    .breakdown{width:100%;border-collapse:collapse;font-size:12px}
+    .breakdown th{background:var(--ra-surface-soft);text-align:left;color:var(--ra-gray-600);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:9px 8px}
+    .breakdown th:last-child,.breakdown td:last-child{text-align:right}
+    .breakdown td{border-bottom:1px solid var(--ra-gray-100);padding:9px 8px;font-variant-numeric:tabular-nums}
+    .breakdown tr:last-child td{border-bottom:0}
+    .sensitivity-grid{overflow:auto;border:1px solid var(--ra-gray-200);border-radius:8px}
+    .sensitivity{width:100%;min-width:480px;border-collapse:collapse;font-size:11px}
+    .sensitivity th{background:var(--ra-surface-soft);padding:8px;text-align:right;color:var(--ra-gray-600)}
+    .sensitivity th:first-child{text-align:left}
+    .sensitivity td{padding:8px;border-top:1px solid var(--ra-gray-100);text-align:right;font-variant-numeric:tabular-nums}
+    .sensitivity td:first-child{text-align:left;font-weight:620}
+    .calc-details{font-size:12px;line-height:1.5;color:var(--ra-gray-700)}
+    .formula{border-top:1px solid var(--ra-gray-100);padding:10px 0}
+    .formula:first-child{border-top:0;padding-top:0}
+    .formula strong{display:block;color:var(--ra-gray-950);margin-bottom:3px}
+    .mobile-summary{display:none;margin-bottom:14px;background:var(--ra-black);color:white;border-radius:10px;padding:15px 16px}
+    .mobile-summary .k{font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.68;font-weight:750}
+    .mobile-summary .v{font-size:28px;font-weight:680;letter-spacing:-.035em;margin-top:4px;font-variant-numeric:tabular-nums}
+    .mobile-summary .sub{font-size:12px;opacity:.72;margin-top:3px}
+    .footer-note{font-size:12px;line-height:1.55;color:var(--ra-gray-600);margin-top:22px;padding:18px 0;border-top:1px solid var(--ra-gray-200)}
+    .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(12px);opacity:0;pointer-events:none;background:var(--ra-black);color:white;border-radius:8px;padding:11px 14px;font-size:13px;z-index:100;transition:all 160ms ease;max-width:min(92vw,520px);text-align:center}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(10,10,9,.42);z-index:70;padding:18px;align-items:center;justify-content:center}
+    .modal-backdrop.open{display:flex}
+    .modal{width:min(520px,100%);background:white;border-radius:12px;border:1px solid var(--ra-gray-200);box-shadow:var(--shadow);overflow:hidden}
+    .modal-head{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid var(--ra-gray-200)}
+    .modal-head h2{font-size:17px;margin:0}
+    .icon-btn{width:44px;height:44px;border:0;background:transparent;border-radius:7px;font-size:22px}
+    .modal-body{padding:18px}
+    .modal-actions{padding:14px 18px;border-top:1px solid var(--ra-gray-200);display:flex;justify-content:flex-end;gap:8px}
+    .hidden-file{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+    @media (max-width:1023px){
+      .topbar-inner{padding-inline:24px}.page{padding-inline:24px}.workspace{grid-template-columns:1fr}.results-panel{position:static}.intro{align-items:start}
+    }
+    @media (max-width:767px){
+      .topbar-inner{padding:10px 14px}.brandline{font-size:12px}.brandline .tool{display:none}.menu-row{gap:5px}.menu>button{min-height:44px;padding-inline:10px;font-size:12px}
+      .page{padding:24px 14px 88px}.intro{display:block;margin-bottom:16px}.status-group{justify-content:flex-start;margin-top:14px}.session-note{margin-bottom:16px}
+      .mobile-summary{display:block}.workspace{gap:14px}.panel-head,.panel-body{padding-inline:16px}.project-row{grid-template-columns:1fr}.mode-switch{grid-template-columns:repeat(2,1fr)}
+      .scenario-tabs{grid-template-columns:1fr 1fr 1fr;gap:6px}.scenario-tab{padding:7px;min-height:48px}.scenario-tab .scenario-kicker{font-size:9px}.scenario-tab .scenario-name{font-size:11px}
+      .form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.field input,.field select{min-height:48px;font-size:16px}.btn{min-height:46px}.results-panel{order:2}.metrics{grid-template-columns:1fr 1fr}
+      .metric{padding:14px}.metric-value{font-size:23px}.result-section{padding-inline:16px}.modal-backdrop{padding:10px}.modal-actions .btn{flex:1}
+    }
+    @media (max-width:420px){
+      .brandline .slash{display:none}.menu>button{padding-inline:8px}.page{padding-inline:12px}.metrics{grid-template-columns:1fr}.metric{border-right:0}.metric:nth-last-child(-n+2){border-bottom:1px solid var(--ra-gray-200)}.metric:last-child{border-bottom:0}
+      .mode-switch{grid-template-columns:1fr 1fr}.hero-value{font-size:38px}
+    }
+    @media print{
+      body{background:white}.topbar,.session-note,.input-panel,.menu-row,.mobile-summary,.footer-note,.toast,.modal-backdrop{display:none!important}.page{max-width:none;padding:0}.intro{margin-bottom:18px}.workspace{display:block}.results-panel{position:static;border:0}.panel{border:0}.result-hero,.result-section{padding-inline:0}.metrics{border:1px solid #ddd}.metric{break-inside:avoid}.sensitivity-grid{overflow:visible}.sensitivity{min-width:0}.print-project{display:block!important}
+    }
+    @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+  </style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brandline" aria-label="RanchAssist Cattle Profit Calculator">
+        <span class="brand">RANCHASSIST™</span><span class="slash">/</span><span class="tool">Cattle Profit Calculator</span>
+      </div>
+      <div class="menu-row" aria-label="Project actions">
+        <div class="menu" data-menu>
+          <button type="button" data-menu-trigger aria-expanded="false">Project</button>
+          <div class="menu-panel" role="menu">
+            <button type="button" id="openProjectBtn" role="menuitem">Open Project</button>
+            <button type="button" id="saveProjectBtn" role="menuitem">Save Project</button>
+            <button type="button" id="duplicateProjectBtn" role="menuitem">Duplicate Project</button>
+            <button type="button" id="clearSessionBtn" class="danger-item" role="menuitem">Clear Session</button>
+          </div>
+        </div>
+        <div class="menu" data-menu>
+          <button type="button" data-menu-trigger aria-expanded="false">Export</button>
+          <div class="menu-panel" role="menu">
+            <button type="button" id="exportPdfBtn" role="menuitem">PDF / Print</button>
+            <button type="button" id="exportCsvBtn" role="menuitem">CSV</button>
+            <button type="button" id="printBtn" role="menuitem">Print</button>
+          </div>
+        </div>
+        <div class="menu" data-menu>
+          <button type="button" data-menu-trigger aria-expanded="false">Share</button>
+          <div class="menu-panel" role="menu">
+            <button type="button" id="copySummaryBtn" role="menuitem">Copy Summary</button>
+            <button type="button" id="emailBtn" role="menuitem">Email Summary</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="intro">
+      <div>
+        <div class="eyebrow">Finance</div>
+        <h1>Cattle Profit Calculator</h1>
+        <p class="lede">Model cow-calf, stocker/backgrounder, buy-feed-sell, and custom cattle margins using your own prices, performance assumptions, and operating costs.</p>
+      </div>
+      <div class="status-group">
+        <span class="status-pill" id="saveStatus"><span class="dot"></span><span>Unsaved</span></span>
+        <span class="status-pill"><span id="activeModeLabel">Stocker / Backgrounder</span></span>
+      </div>
+    </section>
+
+    <div class="session-note">
+      <div aria-hidden="true">◌</div>
+      <div><strong>Session only.</strong> RanchAssist does not permanently store this project. Save a RanchAssist <code>.ra</code> project file to continue your work later, or export your results before leaving.</div>
+    </div>
+
+    <div class="mobile-summary" aria-live="polite">
+      <div class="k" id="mobileHeroLabel">Projected profit / head</div>
+      <div class="v" id="mobileHeroValue">$0</div>
+      <div class="sub" id="mobileHeroSub">Enter assumptions to model a scenario.</div>
+    </div>
+
+    <div class="workspace">
+      <section class="panel input-panel" aria-label="Calculator inputs">
+        <div class="panel-head"><h2>Model inputs</h2><button class="btn tertiary" type="button" id="copyScenarioBtn">Copy scenario</button></div>
+        <div class="panel-body">
+          <div class="project-row">
+            <div class="field">
+              <label for="projectName">Project name <span class="meta">Optional</span></label>
+              <input id="projectName" type="text" maxlength="120" placeholder="August cattle profit model">
+            </div>
+            <div class="field">
+              <label for="scenarioName">Scenario name</label>
+              <input id="scenarioName" type="text" maxlength="50">
+            </div>
+          </div>
+
+          <div class="scenario-tabs" id="scenarioTabs" aria-label="Scenarios"></div>
+
+          <div class="mode-switch" id="modeSwitch" aria-label="Enterprise mode">
+            <button type="button" class="mode-btn" data-mode="stocker">Stocker</button>
+            <button type="button" class="mode-btn" data-mode="buyFeedSell">Buy · Feed · Sell</button>
+            <button type="button" class="mode-btn" data-mode="cowCalf">Cow-Calf</button>
+            <button type="button" class="mode-btn" data-mode="custom">Custom</button>
+          </div>
+
+          <div class="validation" id="validationBox" role="alert"></div>
+          <div id="dynamicForm"></div>
+        </div>
+      </section>
+
+      <aside class="panel results-panel" aria-label="Live results">
+        <div class="result-hero">
+          <div class="hero-label" id="heroLabel">Projected profit / head</div>
+          <div class="hero-value" id="heroValue">$0</div>
+          <div class="hero-context" id="heroContext">Planning estimate based on the active scenario.</div>
+        </div>
+        <div class="metrics" id="metrics"></div>
+        <section class="result-section">
+          <div class="section-row"><h3>Revenue vs. cost</h3><span class="status-pill" id="marginStatus">—</span></div>
+          <div class="bar-set" id="comparisonBars"></div>
+        </section>
+        <section class="result-section">
+          <div class="section-row"><h3>Cost & revenue breakdown</h3></div>
+          <table class="breakdown" aria-label="Cost and revenue breakdown"><thead><tr><th>Item</th><th>Amount</th></tr></thead><tbody id="breakdownBody"></tbody></table>
+        </section>
+        <section class="result-section">
+          <div class="section-row"><h3>Sensitivity</h3><span class="status-pill">No market forecast</span></div>
+          <div class="sensitivity-grid"><table class="sensitivity" aria-label="Sensitivity analysis"><thead><tr><th>Assumption</th><th>Lower</th><th>Base</th><th>Higher</th></tr></thead><tbody id="sensitivityBody"></tbody></table></div>
+        </section>
+        <section class="result-section">
+          <details>
+            <summary class="btn tertiary" style="padding:0;min-height:38px">View Calculation Details</summary>
+            <div class="calc-details" id="calcDetails"></div>
+          </details>
+        </section>
+      </aside>
+    </div>
+
+    <p class="footer-note">RanchAssist outputs are planning estimates based on user-entered assumptions. They are not financial advice, a market forecast, a guarantee of sale price, gain, pregnancy, calving, weaning, death loss, or realized return. Review actual records, contracts, lender terms, marketing charges, and local conditions before making financial decisions.</p>
+  </main>
+
+  <input class="hidden-file" type="file" id="projectFileInput" accept=".ra,application/json,application/x-ranchassist-project">
+
+  <div class="modal-backdrop" id="copyScenarioModal" role="dialog" aria-modal="true" aria-labelledby="copyScenarioTitle">
+    <div class="modal">
+      <div class="modal-head"><h2 id="copyScenarioTitle">Copy active scenario</h2><button type="button" class="icon-btn" data-close-modal aria-label="Close">×</button></div>
+      <div class="modal-body">
+        <div class="field"><label for="copyTarget">Copy into</label><select id="copyTarget"></select><div class="help">This replaces the target scenario's inputs with a copy of the active scenario.</div></div>
+      </div>
+      <div class="modal-actions"><button type="button" class="btn" data-close-modal>Cancel</button><button type="button" class="btn primary" id="confirmCopyScenario">Copy Scenario</button></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="emailModal" role="dialog" aria-modal="true" aria-labelledby="emailTitle">
+    <div class="modal">
+      <div class="modal-head"><h2 id="emailTitle">Email financial summary</h2><button type="button" class="icon-btn" data-close-modal aria-label="Close">×</button></div>
+      <div class="modal-body">
+        <div class="field"><label for="emailRecipient">Recipient email</label><input id="emailRecipient" type="email" autocomplete="email" placeholder="name@example.com"><div class="help">Email is sent only when you choose Send. The current project is not stored by RanchAssist.</div></div>
+      </div>
+      <div class="modal-actions"><button type="button" class="btn" data-close-modal>Cancel</button><button type="button" class="btn primary" id="sendEmailBtn">Send Email</button></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  const TOOL_ID = 'cattle-profit-calculator';
+  const TOOL_NAME = 'Cattle Profit Calculator';
+  const TOOL_VERSION = '1.0.0';
+  const RA_FORMAT_VERSION = '1.0';
+  const SESSION_KEY = 'ranchassist:cattle-profit-calculator:active';
+  const MODE_LABELS = {
+    stocker:'Stocker / Backgrounder',
+    buyFeedSell:'Buy · Feed · Sell',
+    cowCalf:'Cow-Calf',
+    custom:'Custom'
+  };
+
+  const money = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0});
+  const money2 = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2});
+  const num0 = new Intl.NumberFormat('en-US',{maximumFractionDigits:0});
+  const num1 = new Intl.NumberFormat('en-US',{maximumFractionDigits:1});
+  const num2 = new Intl.NumberFormat('en-US',{maximumFractionDigits:2});
+
+  let state = makeInitialState();
+  let activeScenario = 0;
+  let lastSavedStateHash = '';
+  let dirty = false;
+  let toastTimer = null;
+
+  const els = {
+    projectName:document.getElementById('projectName'),scenarioName:document.getElementById('scenarioName'),scenarioTabs:document.getElementById('scenarioTabs'),
+    modeSwitch:document.getElementById('modeSwitch'),dynamicForm:document.getElementById('dynamicForm'),validationBox:document.getElementById('validationBox'),
+    saveStatus:document.getElementById('saveStatus'),activeModeLabel:document.getElementById('activeModeLabel'),heroLabel:document.getElementById('heroLabel'),heroValue:document.getElementById('heroValue'),heroContext:document.getElementById('heroContext'),
+    metrics:document.getElementById('metrics'),comparisonBars:document.getElementById('comparisonBars'),breakdownBody:document.getElementById('breakdownBody'),sensitivityBody:document.getElementById('sensitivityBody'),calcDetails:document.getElementById('calcDetails'),marginStatus:document.getElementById('marginStatus'),
+    mobileHeroLabel:document.getElementById('mobileHeroLabel'),mobileHeroValue:document.getElementById('mobileHeroValue'),mobileHeroSub:document.getElementById('mobileHeroSub'),
+    projectFileInput:document.getElementById('projectFileInput'),copyScenarioModal:document.getElementById('copyScenarioModal'),copyTarget:document.getElementById('copyTarget'),emailModal:document.getElementById('emailModal'),emailRecipient:document.getElementById('emailRecipient'),toast:document.getElementById('toast')
+  };
+
+  function makeInitialState(){
+    const now = new Date().toISOString();
+    return {
+      project:{id:uuid(),name:'Cattle Profit Model',createdAt:now,updatedAt:now},
+      scenarios:[
+        makeScenario('Base Case','stocker'),
+        makeScenario('Case B','stocker'),
+        makeScenario('Case C','stocker')
+      ],
+      sensitivitySettings:{salePricePct:10,feedCostPct:10,deathLossPoints:2,adgPct:10,weaningPoints:5},
+      notes:''
+    };
+  }
+
+  function makeScenario(name,mode){
+    return {
+      name,mode,
+      inputs:{
+        stocker:defaultStocker(),
+        buyFeedSell:Object.assign(defaultStocker(),{feedCostPerDay:2.45,pasturePerHead:0,laborPerHead:12,miscPerHead:8}),
+        cowCalf:defaultCowCalf(),
+        custom:defaultCustom()
+      }
+    };
+  }
+
+  function defaultStocker(){
+    return {
+      headCount:100,purchaseWeight:500,purchasePriceCwt:250,targetSaleWeight:750,salePriceCwt:230,durationMethod:'adg',targetAdg:2.0,ownershipDays:125,
+      deathLossPct:1.5,shrinkPct:2.0,feedCostPerDay:1.65,commissionPct:2.0,marketingPerSoldHead:8,freightPerHead:28,vetPerHead:18,mineralPerHead:8,pasturePerHead:42,laborPerHead:15,miscPerHead:10,financingAprPct:8.5
+    };
+  }
+
+  function defaultCowCalf(){
+    return {
+      cowsExposed:100,cowValuePerHead:1800,calvingPct:92,weaningSurvivalPct:95,calfSaleWeight:550,calfPriceCwt:275,cullRevenueTotal:9000,
+      commissionPct:2,freightPerCalf:18,bullCostAnnual:4500,feedPerCow:420,pasturePerCow:260,vetPerCow:42,mineralPerCow:36,laborPerCow:65,miscPerCow:25,cowDeathLossPct:1.5,financingAprPct:5.5,ownershipMonths:12
+    };
+  }
+
+  function defaultCustom(){
+    return {
+      headCount:100,startingValuePerHead:1200,saleRevenuePerHead:1600,operatingCostPerHead:225,fixedCostsTotal:3000,deathLossPct:1.5,commissionPct:2,financingAprPct:7.5,ownershipDays:180
+    };
+  }
+
+  function currentScenario(){ return state.scenarios[activeScenario]; }
+  function currentInputs(){ const s=currentScenario(); return s.inputs[s.mode]; }
+  function n(v,fallback=0){ const x=Number(v); return Number.isFinite(x)?x:fallback; }
+  function pct(v){ return Math.max(0,n(v))/100; }
+  function clamp(v,min,max){ return Math.min(max,Math.max(min,n(v))); }
+  function esc(v){ return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+  function uuid(){ return (crypto&&crypto.randomUUID)?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0,v=c==='x'?r:(r&3|8);return v.toString(16)}); }
+  function hash(obj){ const str=JSON.stringify(obj); let h=2166136261; for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)} return (h>>>0).toString(16); }
+
+  function renderAll(){
+    renderScenarioTabs();
+    const s=currentScenario();
+    els.projectName.value=state.project.name||'';
+    els.scenarioName.value=s.name||'';
+    [...els.modeSwitch.querySelectorAll('[data-mode]')].forEach(b=>b.classList.toggle('active',b.dataset.mode===s.mode));
+    els.activeModeLabel.textContent=MODE_LABELS[s.mode];
+    renderForm();
+    recalcAndRender();
+    renderSaveStatus();
+  }
+
+  function renderScenarioTabs(){
+    els.scenarioTabs.innerHTML=state.scenarios.map((s,i)=>`<button type="button" class="scenario-tab ${i===activeScenario?'active':''}" data-scenario="${i}" aria-pressed="${i===activeScenario}"><span class="scenario-kicker">Scenario ${i+1}</span><span class="scenario-name">${esc(s.name||('Scenario '+(i+1)))}</span></button>`).join('');
+  }
+
+  function field(key,label,value,unit='',options={}){
+    const type=options.type||'number';
+    const step=options.step??(type==='number'?'any':undefined);
+    const min=options.min??(type==='number'?0:undefined);
+    const max=options.max;
+    const full=options.full?' full':'';
+    const helper=options.help?`<div class="help">${esc(options.help)}</div>`:'';
+    const badge=options.badge?`<span class="${options.badge==='Assumption'?'assumption':'meta'}">${esc(options.badge)}</span>`:'';
+    if(type==='select'){
+      const opts=(options.options||[]).map(o=>`<option value="${esc(o.value)}" ${String(o.value)===String(value)?'selected':''}>${esc(o.label)}</option>`).join('');
+      return `<div class="field${full}"><label for="f_${key}">${esc(label)}${badge}</label><select id="f_${key}" data-field="${esc(key)}">${opts}</select>${helper}</div>`;
+    }
+    const attrs=[`id="f_${key}"`,`data-field="${esc(key)}"`,`type="${esc(type)}"`,`value="${esc(value)}"`];
+    if(step!==undefined) attrs.push(`step="${esc(step)}"`);if(min!==undefined) attrs.push(`min="${esc(min)}"`);if(max!==undefined) attrs.push(`max="${esc(max)}"`);
+    const input=`<input ${attrs.join(' ')} inputmode="${type==='number'?'decimal':'text'}">`;
+    return `<div class="field${full}"><label for="f_${key}">${esc(label)}${badge}</label>${unit?`<div class="unit-wrap">${input}<span class="unit">${esc(unit)}</span></div>`:input}${helper}</div>`;
+  }
+
+  function renderForm(){
+    const s=currentScenario(),v=currentInputs();
+    if(s.mode==='stocker'||s.mode==='buyFeedSell'){
+      const modeWord=s.mode==='stocker'?'Stocker / Backgrounder':'Buy · Feed · Sell';
+      els.dynamicForm.innerHTML=`
+        <section class="step"><div class="step-title"><div><div class="step-number">Step 1</div><h3>Purchase & cattle</h3></div><span class="status-pill">${modeWord}</span></div>
+          <div class="form-grid">
+            ${field('headCount','Head count',v.headCount,'head')}${field('purchaseWeight','Purchase weight',v.purchaseWeight,'lb')}
+            ${field('purchasePriceCwt','Purchase price',v.purchasePriceCwt,'$/cwt')}${field('deathLossPct','Death loss',v.deathLossPct,'%',{badge:'Assumption',step:.1,max:100})}
+          </div>
+        </section>
+        <section class="step"><div class="step-title"><div><div class="step-number">Step 2</div><h3>Performance & sale</h3></div></div>
+          <div class="form-grid">
+            ${field('targetSaleWeight','Target sale weight',v.targetSaleWeight,'lb')}${field('salePriceCwt','Sale price',v.salePriceCwt,'$/cwt')}
+            ${field('durationMethod','Project duration from',v.durationMethod,'',{type:'select',options:[{value:'adg',label:'Target ADG'},{value:'days',label:'Ownership days'}],help:'Choose which input controls projected days. The other is shown as a cross-check.'})}
+            ${field('targetAdg','Target ADG',v.targetAdg,'lb/day',{badge:'Assumption',step:.01})}${field('ownershipDays','Ownership period',v.ownershipDays,'days',{step:1})}${field('shrinkPct','Sale shrink',v.shrinkPct,'%',{badge:'Assumption',step:.1,max:100})}
+          </div>
+        </section>
+        <section class="step"><div class="step-title"><div><div class="step-number">Step 3</div><h3>Operating costs</h3></div></div>
+          <div class="form-grid">
+            ${field('feedCostPerDay','Feed / ration cost',v.feedCostPerDay,'$/head/day',{badge:'Assumption',step:.01})}${field('pasturePerHead','Pasture / lease',v.pasturePerHead,'$/head',{step:.01})}
+            ${field('vetPerHead','Vet / medicine',v.vetPerHead,'$/head',{step:.01})}${field('mineralPerHead','Mineral',v.mineralPerHead,'$/head',{step:.01})}
+            ${field('freightPerHead','Freight',v.freightPerHead,'$/head',{step:.01})}${field('laborPerHead','Labor',v.laborPerHead,'$/head',{step:.01})}
+          </div>
+        </section>
+        <details class="advanced"><summary>Advanced Settings</summary><div class="advanced-content form-grid">
+          ${field('commissionPct','Commission / marketing rate',v.commissionPct,'%',{step:.1,max:100})}${field('marketingPerSoldHead','Fixed marketing cost',v.marketingPerSoldHead,'$/sold head',{step:.01})}
+          ${field('financingAprPct','Financing / interest APR',v.financingAprPct,'%',{step:.1})}${field('miscPerHead','Miscellaneous',v.miscPerHead,'$/head',{step:.01})}
+        </div></details>`;
+    } else if(s.mode==='cowCalf'){
+      els.dynamicForm.innerHTML=`
+        <section class="step"><div class="step-title"><div><div class="step-number">Step 1</div><h3>Breeding herd</h3></div><span class="status-pill">Annual model</span></div><div class="form-grid">
+          ${field('cowsExposed','Cows exposed',v.cowsExposed,'cows')}${field('cowValuePerHead','Breeding cow value',v.cowValuePerHead,'$/cow',{badge:'Assumption',step:.01})}
+          ${field('calvingPct','Calving rate',v.calvingPct,'%',{badge:'Assumption',step:.1,max:100})}${field('weaningSurvivalPct','Weaning survival',v.weaningSurvivalPct,'%',{badge:'Assumption',step:.1,max:100,help:'Percent of calves born expected to be weaned.'})}
+          ${field('cowDeathLossPct','Cow death loss',v.cowDeathLossPct,'%',{badge:'Assumption',step:.1,max:100})}
+        </div></section>
+        <section class="step"><div class="step-title"><div><div class="step-number">Step 2</div><h3>Calf revenue</h3></div></div><div class="form-grid">
+          ${field('calfSaleWeight','Calf sale weight',v.calfSaleWeight,'lb')}${field('calfPriceCwt','Calf sale price',v.calfPriceCwt,'$/cwt')}
+          ${field('cullRevenueTotal','Cull / other herd revenue',v.cullRevenueTotal,'$ total',{step:.01})}${field('commissionPct','Commission / marketing rate',v.commissionPct,'%',{step:.1,max:100})}
+          ${field('freightPerCalf','Freight / calf marketed',v.freightPerCalf,'$/calf',{step:.01})}
+        </div></section>
+        <section class="step"><div class="step-title"><div><div class="step-number">Step 3</div><h3>Annual costs</h3></div></div><div class="form-grid">
+          ${field('feedPerCow','Feed',v.feedPerCow,'$/cow/year',{step:.01})}${field('pasturePerCow','Pasture / lease',v.pasturePerCow,'$/cow/year',{step:.01})}
+          ${field('vetPerCow','Vet / medicine',v.vetPerCow,'$/cow/year',{step:.01})}${field('mineralPerCow','Mineral',v.mineralPerCow,'$/cow/year',{step:.01})}
+          ${field('laborPerCow','Labor',v.laborPerCow,'$/cow/year',{step:.01})}${field('bullCostAnnual','Bull cost allocation',v.bullCostAnnual,'$ total/year',{step:.01})}
+        </div></section>
+        <details class="advanced"><summary>Advanced Settings</summary><div class="advanced-content form-grid">
+          ${field('miscPerCow','Miscellaneous',v.miscPerCow,'$/cow/year',{step:.01})}${field('financingAprPct','Financing / interest APR',v.financingAprPct,'%',{step:.1})}
+          ${field('ownershipMonths','Financing period',v.ownershipMonths,'months',{step:.1,max:24})}
+        </div></details>`;
+    } else {
+      els.dynamicForm.innerHTML=`
+        <section class="step"><div class="step-title"><div><div class="step-number">Step 1</div><h3>Custom enterprise</h3></div><span class="status-pill">Flexible model</span></div><div class="form-grid">
+          ${field('headCount','Head count',v.headCount,'head')}${field('startingValuePerHead','Starting / purchase value',v.startingValuePerHead,'$/head',{step:.01})}
+          ${field('saleRevenuePerHead','Sale revenue',v.saleRevenuePerHead,'$/marketed head',{step:.01})}${field('deathLossPct','Death loss',v.deathLossPct,'%',{badge:'Assumption',step:.1,max:100})}
+          ${field('operatingCostPerHead','Operating cost',v.operatingCostPerHead,'$/head',{step:.01})}${field('fixedCostsTotal','Fixed costs',v.fixedCostsTotal,'$ total',{step:.01})}
+        </div></section>
+        <details class="advanced"><summary>Advanced Settings</summary><div class="advanced-content form-grid">
+          ${field('commissionPct','Commission / marketing rate',v.commissionPct,'%',{step:.1,max:100})}${field('financingAprPct','Financing / interest APR',v.financingAprPct,'%',{step:.1})}
+          ${field('ownershipDays','Ownership period',v.ownershipDays,'days',{step:1})}
+        </div></details>`;
+    }
+  }
+
+  function calculateScenario(s,override={}){
+    const mode=s.mode;
+    const v=Object.assign({},s.inputs[mode],override);
+    if(mode==='stocker'||mode==='buyFeedSell') return calcStocker(v,mode);
+    if(mode==='cowCalf') return calcCowCalf(v);
+    return calcCustom(v);
+  }
+
+  function calcStocker(v,mode){
+    const head=Math.max(0,n(v.headCount)),purchaseWt=Math.max(0,n(v.purchaseWeight)),saleWt=Math.max(0,n(v.targetSaleWeight));
+    const gain=Math.max(0,saleWt-purchaseWt),targetAdg=Math.max(.01,n(v.targetAdg,.01)),enteredDays=Math.max(1,n(v.ownershipDays,1));
+    const days=v.durationMethod==='days'?enteredDays:Math.max(1,Math.ceil(gain/targetAdg));
+    const impliedAdg=gain/days;
+    const death=clamp(v.deathLossPct,0,100)/100,shrink=clamp(v.shrinkPct,0,100)/100,commission=clamp(v.commissionPct,0,99.9)/100;
+    const saleHead=head*(1-death),payWt=saleWt*(1-shrink),purchasePerHead=purchaseWt/100*Math.max(0,n(v.purchasePriceCwt));
+    const purchaseTotal=purchasePerHead*head,feedPerHead=Math.max(0,n(v.feedCostPerDay))*days;
+    const nonFeedPerHead=Math.max(0,n(v.freightPerHead))+Math.max(0,n(v.vetPerHead))+Math.max(0,n(v.mineralPerHead))+Math.max(0,n(v.pasturePerHead))+Math.max(0,n(v.laborPerHead))+Math.max(0,n(v.miscPerHead));
+    const interestPerHead=purchasePerHead*Math.max(0,n(v.financingAprPct))/100*days/365;
+    const operatingBase=(feedPerHead+nonFeedPerHead+interestPerHead)*head + Math.max(0,n(v.marketingPerSoldHead))*saleHead;
+    const grossRevenue=saleHead*payWt/100*Math.max(0,n(v.salePriceCwt));
+    const commissionCost=grossRevenue*commission;
+    const totalCost=purchaseTotal+operatingBase+commissionCost;
+    const profit=grossRevenue-totalCost;
+    const profitPerHead=head?profit/head:0;
+    const roi=totalCost?profit/totalCost*100:0;
+    const gainTotal=saleHead*gain;
+    const operatingCost=operatingBase+commissionCost;
+    const costOfGain=gainTotal?operatingCost/gainTotal:0;
+    const grossRevenueBE=(purchaseTotal+operatingBase)/(1-commission);
+    const saleCwt=saleHead*payWt/100;
+    const breakevenCwt=saleCwt?grossRevenueBE/saleCwt:0;
+    const purchaseCostPerHead=purchasePerHead;
+    return {
+      mode,head,saleHead,days,gain,impliedAdg,payWt,purchaseTotal,purchaseCostPerHead,feedPerHead,interestPerHead,operatingBase,commissionCost,totalCost,grossRevenue,profit,profitPerHead,roi,costOfGain,breakevenCwt,
+      primaryLabel:'Projected profit / head',primaryValue:profitPerHead,primaryContext:`${num0.format(head)} head started · ${num1.format(saleHead)} projected sold · ${num0.format(days)} days`,
+      metrics:[
+        ['Total projected profit',money.format(profit),'Active scenario'],['Breakeven sale price',money2.format(breakevenCwt)+'/cwt','At modeled payweight'],['Projected ROI',num1.format(roi)+'%','Profit ÷ total modeled cost'],['Cost of gain',money2.format(costOfGain)+'/lb','Operating cost ÷ gain']
+      ],
+      breakdown:[['Gross sale revenue',grossRevenue],['Purchase cost',-purchaseTotal],['Feed / ration',-(feedPerHead*head)],['Other operating costs',-(nonFeedPerHead*head)],['Financing / interest',-(interestPerHead*head)],['Marketing / commission',-(commissionCost+Math.max(0,n(v.marketingPerSoldHead))*saleHead)],['Projected profit',profit]],
+      formulas:[
+        ['Projected sale head',`${num0.format(head)} × (1 − ${num1.format(n(v.deathLossPct))}%) = ${num1.format(saleHead)} head`],
+        ['Payweight',`${num1.format(saleWt)} lb × (1 − ${num1.format(n(v.shrinkPct))}%) = ${num1.format(payWt)} lb`],
+        ['Ownership period',v.durationMethod==='adg'?`${num1.format(gain)} lb gain ÷ ${num2.format(targetAdg)} lb/day = ${num0.format(days)} days`:`${num0.format(days)} entered days; implied ADG = ${num2.format(impliedAdg)} lb/day`],
+        ['Gross revenue',`${num1.format(saleHead)} head × ${num1.format(payWt)} lb ÷ 100 × ${money2.format(n(v.salePriceCwt))}/cwt = ${money.format(grossRevenue)}`],
+        ['Breakeven sale price',`Modeled costs adjusted for percentage commission ÷ projected sale cwt = ${money2.format(breakevenCwt)}/cwt`],
+        ['Cost of gain',`Operating and carrying costs ÷ ${num0.format(gainTotal)} lb total planned gain = ${money2.format(costOfGain)}/lb`]
+      ],
+      warnings: buildStockerWarnings(v,{gain,days,impliedAdg,saleHead})
+    };
+  }
+
+  function calcCowCalf(v){
+    const cows=Math.max(0,n(v.cowsExposed)),calving=clamp(v.calvingPct,0,100)/100,weaning=clamp(v.weaningSurvivalPct,0,100)/100;
+    const calvesBorn=cows*calving,calvesWeaned=calvesBorn*weaning,calfWt=Math.max(0,n(v.calfSaleWeight)),calfPrice=Math.max(0,n(v.calfPriceCwt));
+    const calfRevenue=calvesWeaned*calfWt/100*calfPrice,cullRevenue=Math.max(0,n(v.cullRevenueTotal)),grossRevenue=calfRevenue+cullRevenue;
+    const commission=clamp(v.commissionPct,0,99.9)/100,commissionCost=calfRevenue*commission,freightCost=calvesWeaned*Math.max(0,n(v.freightPerCalf));
+    const perCowCosts=Math.max(0,n(v.feedPerCow))+Math.max(0,n(v.pasturePerCow))+Math.max(0,n(v.vetPerCow))+Math.max(0,n(v.mineralPerCow))+Math.max(0,n(v.laborPerCow))+Math.max(0,n(v.miscPerCow));
+    const cowDeathExpense=cows*Math.max(0,n(v.cowValuePerHead))*clamp(v.cowDeathLossPct,0,100)/100;
+    const financing=cows*Math.max(0,n(v.cowValuePerHead))*Math.max(0,n(v.financingAprPct))/100*Math.max(0,n(v.ownershipMonths))/12;
+    const baseCostExCommission=perCowCosts*cows+Math.max(0,n(v.bullCostAnnual))+freightCost+cowDeathExpense+financing;
+    const totalCost=baseCostExCommission+commissionCost;
+    const margin=grossRevenue-totalCost,marginCow=cows?margin/cows:0,revenueCow=cows?grossRevenue/cows:0,costCow=cows?totalCost/cows:0,costCalf=calvesWeaned?totalCost/calvesWeaned:0;
+    const lbsWeaned=calvesWeaned*calfWt,poundsPerCow=cows?lbsWeaned/cows:0;
+    const requiredCalfNet=Math.max(0,baseCostExCommission-cullRevenue),requiredCalfGross=requiredCalfNet/(1-commission),marketedCwt=calvesWeaned*calfWt/100,breakevenCwt=marketedCwt?requiredCalfGross/marketedCwt:0;
+    const roi=totalCost?margin/totalCost*100:0;
+    return {
+      mode:'cowCalf',head:cows,calvesBorn,calvesWeaned,calfRevenue,cullRevenue,grossRevenue,totalCost,profit:margin,profitPerHead:marginCow,roi,costCow,costCalf,poundsPerCow,breakevenCwt,
+      primaryLabel:'Projected margin / cow exposed',primaryValue:marginCow,primaryContext:`${num0.format(cows)} cows exposed · ${num1.format(calvesWeaned)} calves weaned`,
+      metrics:[
+        ['Total projected margin',money.format(margin),'Annual active scenario'],['Breakeven calf price',money2.format(breakevenCwt)+'/cwt','After modeled cull revenue'],['Pounds weaned / cow',num1.format(poundsPerCow)+' lb','Cow exposed basis'],['Annual cost / cow',money2.format(costCow),'Includes entered carrying costs']
+      ],
+      breakdown:[['Calf sale revenue',calfRevenue],['Cull / other revenue',cullRevenue],['Feed, pasture & herd costs',-(perCowCosts*cows)],['Bull cost allocation',-Math.max(0,n(v.bullCostAnnual))],['Freight & marketing',-(freightCost+commissionCost)],['Cow death-loss value',-cowDeathExpense],['Financing / interest',-financing],['Projected margin',margin]],
+      formulas:[
+        ['Calves weaned',`${num0.format(cows)} cows × ${num1.format(n(v.calvingPct))}% calving × ${num1.format(n(v.weaningSurvivalPct))}% weaning survival = ${num1.format(calvesWeaned)} calves`],
+        ['Pounds weaned / cow exposed',`${num0.format(lbsWeaned)} lb weaned ÷ ${num0.format(cows)} cows = ${num1.format(poundsPerCow)} lb/cow`],
+        ['Calf revenue',`${num1.format(calvesWeaned)} calves × ${num1.format(calfWt)} lb ÷ 100 × ${money2.format(calfPrice)}/cwt = ${money.format(calfRevenue)}`],
+        ['Breakeven calf price',`Required calf revenue after modeled cull revenue and commission ÷ marketed calf cwt = ${money2.format(breakevenCwt)}/cwt`],
+        ['Annual cost / cow',`${money.format(totalCost)} total modeled cost ÷ ${num0.format(cows)} cows = ${money2.format(costCow)}/cow`],
+        ['Cost / calf weaned',`${money.format(totalCost)} total modeled cost ÷ ${num1.format(calvesWeaned)} calves = ${money2.format(costCalf)}/calf`]
+      ],
+      warnings:buildCowWarnings(v,{calvesWeaned})
+    };
+  }
+
+  function calcCustom(v){
+    const head=Math.max(0,n(v.headCount)),death=clamp(v.deathLossPct,0,100)/100,saleHead=head*(1-death),commission=clamp(v.commissionPct,0,99.9)/100;
+    const starting=head*Math.max(0,n(v.startingValuePerHead)),grossRevenue=saleHead*Math.max(0,n(v.saleRevenuePerHead)),commissionCost=grossRevenue*commission;
+    const operating=head*Math.max(0,n(v.operatingCostPerHead)),fixed=Math.max(0,n(v.fixedCostsTotal));
+    const interest=starting*Math.max(0,n(v.financingAprPct))/100*Math.max(0,n(v.ownershipDays))/365;
+    const totalCost=starting+operating+fixed+commissionCost+interest,profit=grossRevenue-totalCost,profitHead=head?profit/head:0,roi=totalCost?profit/totalCost*100:0;
+    const grossBE=(starting+operating+fixed+interest)/(1-commission),breakevenPerSold=saleHead?grossBE/saleHead:0;
+    return {
+      mode:'custom',head,saleHead,grossRevenue,totalCost,profit,profitPerHead:profitHead,roi,breakevenPerSold,
+      primaryLabel:'Projected profit / head started',primaryValue:profitHead,primaryContext:`${num0.format(head)} head started · ${num1.format(saleHead)} projected marketed`,
+      metrics:[['Total projected profit',money.format(profit),'Active scenario'],['Breakeven revenue',money2.format(breakevenPerSold)+'/sold head','Before modeled commission'],['Projected ROI',num1.format(roi)+'%','Profit ÷ total modeled cost'],['Total modeled cost',money.format(totalCost),'Starting value + entered costs']],
+      breakdown:[['Gross sale revenue',grossRevenue],['Starting / purchase value',-starting],['Operating cost',-operating],['Fixed costs',-fixed],['Marketing / commission',-commissionCost],['Financing / interest',-interest],['Projected profit',profit]],
+      formulas:[['Projected marketed head',`${num0.format(head)} × (1 − ${num1.format(n(v.deathLossPct))}%) = ${num1.format(saleHead)} head`],['Gross revenue',`${num1.format(saleHead)} × ${money2.format(n(v.saleRevenuePerHead))} = ${money.format(grossRevenue)}`],['Breakeven revenue / sold head',`Costs adjusted for commission ÷ marketed head = ${money2.format(breakevenPerSold)}`],['ROI',`${money.format(profit)} profit ÷ ${money.format(totalCost)} cost = ${num1.format(roi)}%`]],
+      warnings: head<=0?['Head count must be greater than 0.']:[]
+    };
+  }
+
+  function buildStockerWarnings(v,r){
+    const warnings=[];
+    if(n(v.headCount)<=0)warnings.push('Head count must be greater than 0.');
+    if(n(v.targetSaleWeight)<=n(v.purchaseWeight))warnings.push('Target sale weight should be greater than purchase weight to model gain.');
+    if(v.durationMethod==='days'&&Math.abs(r.impliedAdg-n(v.targetAdg))>.35)warnings.push(`Entered days imply ${num2.format(r.impliedAdg)} lb/day ADG, which differs materially from the target ADG field.`);
+    if(r.saleHead<=0)warnings.push('Death loss leaves no projected sale head.');
+    if(n(v.shrinkPct)>=10)warnings.push('Shrink assumption is high; verify the percent entered.');
+    return warnings;
+  }
+  function buildCowWarnings(v,r){
+    const warnings=[];
+    if(n(v.cowsExposed)<=0)warnings.push('Cows exposed must be greater than 0.');
+    if(r.calvesWeaned<=0)warnings.push('Current calving/weaning assumptions produce no calves weaned.');
+    if(n(v.calvingPct)>100||n(v.weaningSurvivalPct)>100)warnings.push('Calving and weaning percentages cannot exceed 100%.');
+    return warnings;
+  }
+
+  function recalcAndRender(){
+    const result=calculateScenario(currentScenario());
+    const warnings=result.warnings||[];
+    els.validationBox.classList.toggle('show',warnings.length>0);
+    els.validationBox.innerHTML=warnings.map(w=>`<div>• ${esc(w)}</div>`).join('');
+    els.heroLabel.textContent=result.primaryLabel;
+    els.heroValue.textContent=money2.format(result.primaryValue);
+    els.heroValue.className='hero-value '+(result.primaryValue>0?'positive':result.primaryValue<0?'negative':'');
+    els.heroContext.textContent=result.primaryContext;
+    els.mobileHeroLabel.textContent=result.primaryLabel;els.mobileHeroValue.textContent=money2.format(result.primaryValue);els.mobileHeroSub.textContent=result.primaryContext;
+    els.metrics.innerHTML=result.metrics.map(m=>`<div class="metric"><div class="metric-label">${esc(m[0])}</div><div class="metric-value">${esc(m[1])}</div><div class="metric-note">${esc(m[2])}</div></div>`).join('');
+    renderBars(result);
+    els.breakdownBody.innerHTML=result.breakdown.map(row=>`<tr><td>${esc(row[0])}</td><td>${row[1]<0?'−':''}${money.format(Math.abs(row[1]))}</td></tr>`).join('');
+    renderSensitivity();
+    els.calcDetails.innerHTML=result.formulas.map(f=>`<div class="formula"><strong>${esc(f[0])}</strong>${esc(f[1])}</div>`).join('');
+    els.marginStatus.textContent=result.profit>=0?'Positive projected margin':'Projected loss';
+    els.marginStatus.style.color=result.profit>=0?'var(--ra-green)':'var(--ra-danger)';
+    saveSession();
+    renderSaveStatus();
+  }
+
+  function renderBars(result){
+    const max=Math.max(result.grossRevenue,result.totalCost,1);
+    const rev=Math.min(100,result.grossRevenue/max*100),cost=Math.min(100,result.totalCost/max*100);
+    els.comparisonBars.innerHTML=`
+      <div><div class="bar-label"><span>Gross revenue</span><strong>${money.format(result.grossRevenue)}</strong></div><div class="bar-track"><div class="bar-fill revenue" style="width:${rev}%"></div></div></div>
+      <div><div class="bar-label"><span>Total modeled cost</span><strong>${money.format(result.totalCost)}</strong></div><div class="bar-track"><div class="bar-fill" style="width:${cost}%"></div></div></div>`;
+  }
+
+  function renderSensitivity(){
+    const s=currentScenario(),v=currentInputs(),settings=state.sensitivitySettings,rows=[];
+    const base=calculateScenario(s).profit;
+    const profitWith=(key,val)=>calculateScenario(s,{[key]:val}).profit;
+    if(s.mode==='stocker'||s.mode==='buyFeedSell'){
+      const p=n(v.salePriceCwt),f=n(v.feedCostPerDay),d=n(v.deathLossPct),a=Math.max(.01,n(v.targetAdg));
+      rows.push(['Sale price',profitWith('salePriceCwt',p*(1-settings.salePricePct/100)),base,profitWith('salePriceCwt',p*(1+settings.salePricePct/100))]);
+      rows.push(['Feed cost',profitWith('feedCostPerDay',f*(1-settings.feedCostPct/100)),base,profitWith('feedCostPerDay',f*(1+settings.feedCostPct/100))]);
+      rows.push(['Death loss',profitWith('deathLossPct',Math.max(0,d-settings.deathLossPoints)),base,profitWith('deathLossPct',Math.min(100,d+settings.deathLossPoints))]);
+      const adgProfit=(x)=>calculateScenario(s,{targetAdg:x,durationMethod:'adg'}).profit;
+      rows.push(['Target ADG',adgProfit(a*(1-settings.adgPct/100)),base,adgProfit(a*(1+settings.adgPct/100))]);
+    } else if(s.mode==='cowCalf'){
+      const p=n(v.calfPriceCwt),f=n(v.feedPerCow),d=n(v.cowDeathLossPct),w=n(v.weaningSurvivalPct);
+      rows.push(['Calf sale price',profitWith('calfPriceCwt',p*(1-settings.salePricePct/100)),base,profitWith('calfPriceCwt',p*(1+settings.salePricePct/100))]);
+      rows.push(['Feed cost / cow',profitWith('feedPerCow',f*(1-settings.feedCostPct/100)),base,profitWith('feedPerCow',f*(1+settings.feedCostPct/100))]);
+      rows.push(['Cow death loss',profitWith('cowDeathLossPct',Math.max(0,d-settings.deathLossPoints)),base,profitWith('cowDeathLossPct',Math.min(100,d+settings.deathLossPoints))]);
+      rows.push(['Weaning survival',profitWith('weaningSurvivalPct',Math.max(0,w-settings.weaningPoints)),base,profitWith('weaningSurvivalPct',Math.min(100,w+settings.weaningPoints))]);
+    } else {
+      const p=n(v.saleRevenuePerHead),c=n(v.operatingCostPerHead),d=n(v.deathLossPct);
+      rows.push(['Sale revenue / head',profitWith('saleRevenuePerHead',p*(1-settings.salePricePct/100)),base,profitWith('saleRevenuePerHead',p*(1+settings.salePricePct/100))]);
+      rows.push(['Operating cost / head',profitWith('operatingCostPerHead',c*(1-settings.feedCostPct/100)),base,profitWith('operatingCostPerHead',c*(1+settings.feedCostPct/100))]);
+      rows.push(['Death loss',profitWith('deathLossPct',Math.max(0,d-settings.deathLossPoints)),base,profitWith('deathLossPct',Math.min(100,d+settings.deathLossPoints))]);
+    }
+    els.sensitivityBody.innerHTML=rows.map(r=>`<tr><td>${esc(r[0])}</td><td>${formatSensitivity(r[1])}</td><td>${formatSensitivity(r[2])}</td><td>${formatSensitivity(r[3])}</td></tr>`).join('');
+  }
+  function formatSensitivity(v){ return `<span style="color:${v>=0?'var(--ra-green)':'var(--ra-danger)'}">${money.format(v)}</span>`; }
+
+  function updateField(key,value){
+    const inputs=currentInputs();
+    if(key==='durationMethod') inputs[key]=value;
+    else inputs[key]=n(value);
+    markDirty();
+    recalcAndRender();
+  }
+
+  function buildSummary(){
+    const s=currentScenario(),r=calculateScenario(s),lines=[
+      `RanchAssist™ — ${TOOL_NAME}`,
+      `Project: ${state.project.name||'Cattle Profit Model'}`,
+      `Scenario: ${s.name}`,
+      `Mode: ${MODE_LABELS[s.mode]}`,
+      '',
+      `${r.primaryLabel}: ${money2.format(r.primaryValue)}`,
+      `Total projected ${s.mode==='cowCalf'?'margin':'profit'}: ${money.format(r.profit)}`,
+      `Total modeled revenue: ${money.format(r.grossRevenue)}`,
+      `Total modeled cost: ${money.format(r.totalCost)}`,
+      `Projected ROI: ${num1.format(r.roi)}%`
+    ];
+    if(s.mode==='stocker'||s.mode==='buyFeedSell'){
+      lines.push(`Breakeven sale price: ${money2.format(r.breakevenCwt)}/cwt`,`Cost of gain: ${money2.format(r.costOfGain)}/lb`,`Projected sale head: ${num1.format(r.saleHead)}`,`Ownership period: ${num0.format(r.days)} days`);
+    } else if(s.mode==='cowCalf'){
+      lines.push(`Calves weaned: ${num1.format(r.calvesWeaned)}`,`Pounds weaned/cow exposed: ${num1.format(r.poundsPerCow)} lb`,`Annual cost/cow: ${money2.format(r.costCow)}`,`Breakeven calf price: ${money2.format(r.breakevenCwt)}/cwt`);
+    } else lines.push(`Breakeven revenue: ${money2.format(r.breakevenPerSold)}/sold head`,`Projected marketed head: ${num1.format(r.saleHead)}`);
+    lines.push('',`Generated: ${new Date().toLocaleString()}`,'Planning estimate only; not financial advice or a market forecast.');
+    return lines.join('\n');
+  }
+
+  function buildCSV(){
+    const rows=[['RanchAssist Cattle Profit Calculator'],['Project',state.project.name],['Generated',new Date().toISOString()],[],['Scenario','Mode','Primary Metric','Total Profit/Margin','Revenue','Cost','ROI']];
+    state.scenarios.forEach(s=>{const r=calculateScenario(s);rows.push([s.name,MODE_LABELS[s.mode],r.primaryValue,r.profit,r.grossRevenue,r.totalCost,r.roi]);});
+    const s=currentScenario(),r=calculateScenario(s);rows.push([],['Active Scenario Breakdown'],['Item','Amount']);r.breakdown.forEach(x=>rows.push(x));
+    rows.push([],['Disclaimer','Planning estimate only; not financial advice or a market forecast.']);
+    return rows.map(row=>row.map(csvCell).join(',')).join('\r\n');
+  }
+  function csvCell(v){
+    let x=String(v??'');
+    if(/^[=+@]/.test(x))x="'"+x;
+    if(/[",\r\n]/.test(x))x='"'+x.replace(/"/g,'""')+'"';
+    return x;
+  }
+
+  function buildRAProject(){
+    const now=new Date().toISOString();state.project.updatedAt=now;
+    return {
+      raFile:true,formatVersion:RA_FORMAT_VERSION,
+      tool:{id:TOOL_ID,name:TOOL_NAME,version:TOOL_VERSION},
+      project:{...state.project},
+      preferences:{currency:'USD',units:'imperial'},
+      state:{enterpriseMode:currentScenario().mode,livestockInputs:state.scenarios.map(s=>({mode:s.mode,inputs:s.inputs[s.mode]})),revenues:{source:'user-entered'},costs:{source:'user-entered'},scenarios:state.scenarios,sensitivitySettings:state.sensitivitySettings,notes:state.notes||''},
+      spatial:null,metadata:{generator:'RanchAssist',schema:'ra-project'}
+    };
+  }
+
+  function validateRAProject(p){
+    if(!p||p.raFile!==true) throw new Error('Not a RanchAssist project. Choose a .ra file exported from RanchAssist.');
+    if(String(p.formatVersion)!==RA_FORMAT_VERSION) throw new Error('This RanchAssist project format is not supported by this version.');
+    if(!p.tool||p.tool.id!==TOOL_ID) throw new Error(`Different RanchAssist tool. This project belongs to ${p.tool&&p.tool.name?p.tool.name:'another RanchAssist tool'}.`);
+    if(!p.project||!p.project.id||!p.state||!Array.isArray(p.state.scenarios)) throw new Error('Project is incomplete. Required Cattle Profit Calculator state is missing.');
+  }
+
+  function migrateProjectIfNeeded(p){
+    // Migration scaffold for future tool-state versions. Format 1.0 / tool 1.x currently requires no transform.
+    return p;
+  }
+
+  function restoreFromRA(p){
+    validateRAProject(p);p=migrateProjectIfNeeded(p);
+    state={project:{...p.project},scenarios:p.state.scenarios,sensitivitySettings:p.state.sensitivitySettings||makeInitialState().sensitivitySettings,notes:p.state.notes||''};
+    activeScenario=0;normalizeState();lastSavedStateHash=hash(state);dirty=false;saveSession();renderAll();toast('Project opened. Your saved RanchAssist project has been restored.');
+  }
+
+  function normalizeState(){
+    if(!Array.isArray(state.scenarios)||state.scenarios.length!==3){throw new Error('Project scenarios are incomplete.');}
+    state.scenarios.forEach((s,i)=>{
+      if(!MODE_LABELS[s.mode])s.mode='stocker';if(!s.name)s.name=`Scenario ${i+1}`;if(!s.inputs)s.inputs={};
+      if(!s.inputs.stocker)s.inputs.stocker=defaultStocker();if(!s.inputs.buyFeedSell)s.inputs.buyFeedSell=Object.assign(defaultStocker(),{feedCostPerDay:2.45});if(!s.inputs.cowCalf)s.inputs.cowCalf=defaultCowCalf();if(!s.inputs.custom)s.inputs.custom=defaultCustom();
+    });
+    if(!state.project.id)state.project.id=uuid();if(!state.project.createdAt)state.project.createdAt=new Date().toISOString();
+  }
+
+  function saveProject(){
+    const p=buildRAProject();download(`${sanitizeFilename(state.project.name||'Cattle_Profit_Model')}.ra`,JSON.stringify(p,null,2),'application/x-ranchassist-project');
+    lastSavedStateHash=hash(state);dirty=false;saveSession();renderSaveStatus();toast('Project saved. Your RanchAssist .ra project file is ready.');
+  }
+  function duplicateProject(){
+    state=JSON.parse(JSON.stringify(state));state.project.id=uuid();state.project.name=((state.project.name||'Cattle Profit Model')+' Copy').slice(0,120);state.project.createdAt=new Date().toISOString();state.project.updatedAt=state.project.createdAt;lastSavedStateHash='';dirty=true;saveSession();renderAll();toast('Project duplicated with a new project ID.');
+  }
+  function clearSession(){
+    if(!confirm('Clear this session?\n\nThis removes the current unsaved RanchAssist project from this browser session. Saved .ra files on your device will not be affected.'))return;
+    sessionStorage.removeItem(SESSION_KEY);state=makeInitialState();activeScenario=0;lastSavedStateHash='';dirty=false;renderAll();toast('Session cleared.');
+  }
+  function saveSession(){
+    try{sessionStorage.setItem(SESSION_KEY,JSON.stringify({state,activeScenario,lastSavedStateHash,dirty}));}catch(e){}
+  }
+  function restoreSession(){
+    try{const raw=sessionStorage.getItem(SESSION_KEY);if(!raw)return false;const saved=JSON.parse(raw);if(!saved.state)return false;state=saved.state;activeScenario=clamp(saved.activeScenario,0,2);lastSavedStateHash=saved.lastSavedStateHash||'';dirty=!!saved.dirty;normalizeState();return true;}catch(e){return false;}
+  }
+  function markDirty(){dirty=true;saveSession();renderSaveStatus();}
+  function renderSaveStatus(){
+    const saved=lastSavedStateHash&&hash(state)===lastSavedStateHash&&!dirty;
+    els.saveStatus.classList.toggle('saved',!!saved);
+    els.saveStatus.querySelector('span:last-child').textContent=saved?'Saved':dirty?'Unsaved changes':'Unsaved';
+  }
+
+  function sanitizeFilename(name){return String(name).trim().replace(/[\\/:*?"<>|\x00-\x1F]/g,'_').replace(/\s+/g,'_').replace(/_+/g,'_').slice(0,100)||'Cattle_Profit_Model';}
+  function download(filename,content,type){const blob=new Blob([content],{type:type||'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);}
+  function printReport(){window.print();}
+  async function copySummary(){const text=buildSummary();try{await navigator.clipboard.writeText(text);toast('Summary copied.');}catch(e){const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();toast('Summary copied.');}}
+
+  function sendEmail(){
+    const recipient=els.emailRecipient.value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)){toast('Enter a valid email address.');return;}
+    const btn=document.getElementById('sendEmailBtn');btn.disabled=true;btn.textContent='Sending…';
+    const payload={recipient,subject:`${state.project.name||'Cattle Profit Model'} — RanchAssist Cattle Profit Summary`,projectName:state.project.name,mode:MODE_LABELS[currentScenario().mode]+' · '+currentScenario().name,summary:buildSummary(),generatedAt:new Date().toLocaleString()};
+    if(window.google&&google.script&&google.script.run){
+      google.script.run.withSuccessHandler(()=>{btn.disabled=false;btn.textContent='Send Email';closeModal(els.emailModal);toast('Email sent.');}).withFailureHandler(err=>{btn.disabled=false;btn.textContent='Send Email';toast(err&&err.message?err.message:'Email could not be sent.');}).sendProfitSummaryEmail(payload);
+    }else{
+      btn.disabled=false;btn.textContent='Send Email';
+      const body=encodeURIComponent(payload.summary),subject=encodeURIComponent(payload.subject);window.location.href=`mailto:${encodeURIComponent(recipient)}?subject=${subject}&body=${body}`;closeModal(els.emailModal);toast('Opened your email app. Apps Script deployment uses MailApp for direct sharing.');
+    }
+  }
+
+  function openModal(el){el.classList.add('open');const focusable=el.querySelector('input,select,button');if(focusable)setTimeout(()=>focusable.focus(),20);}
+  function closeModal(el){el.classList.remove('open');}
+  function toast(msg){clearTimeout(toastTimer);els.toast.textContent=msg;els.toast.classList.add('show');toastTimer=setTimeout(()=>els.toast.classList.remove('show'),3200);}
+  function closeMenus(){document.querySelectorAll('[data-menu].open').forEach(m=>{m.classList.remove('open');m.querySelector('[data-menu-trigger]').setAttribute('aria-expanded','false')});}
+
+  document.addEventListener('click',e=>{
+    const trigger=e.target.closest('[data-menu-trigger]');
+    if(trigger){const menu=trigger.closest('[data-menu]'),willOpen=!menu.classList.contains('open');closeMenus();menu.classList.toggle('open',willOpen);trigger.setAttribute('aria-expanded',String(willOpen));return;}
+    if(!e.target.closest('[data-menu]'))closeMenus();
+  });
+
+  els.scenarioTabs.addEventListener('click',e=>{const b=e.target.closest('[data-scenario]');if(!b)return;activeScenario=Number(b.dataset.scenario);saveSession();renderAll();});
+  els.modeSwitch.addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(!b)return;currentScenario().mode=b.dataset.mode;markDirty();renderAll();});
+  els.dynamicForm.addEventListener('input',e=>{const key=e.target.dataset.field;if(!key)return;updateField(key,e.target.value);});
+  els.dynamicForm.addEventListener('change',e=>{const key=e.target.dataset.field;if(!key)return;updateField(key,e.target.value);if(key==='durationMethod')renderForm();});
+  els.projectName.addEventListener('input',()=>{state.project.name=els.projectName.value.slice(0,120);markDirty();});
+  els.scenarioName.addEventListener('input',()=>{currentScenario().name=els.scenarioName.value.slice(0,50);markDirty();renderScenarioTabs();});
+
+  document.getElementById('openProjectBtn').addEventListener('click',()=>{closeMenus();els.projectFileInput.value='';els.projectFileInput.click();});
+  els.projectFileInput.addEventListener('change',async()=>{const file=els.projectFileInput.files&&els.projectFileInput.files[0];if(!file)return;try{const text=await file.text();restoreFromRA(JSON.parse(text));}catch(err){toast(err.message||'Project file could not be read.');}});
+  document.getElementById('saveProjectBtn').addEventListener('click',()=>{closeMenus();saveProject();});
+  document.getElementById('duplicateProjectBtn').addEventListener('click',()=>{closeMenus();duplicateProject();});
+  document.getElementById('clearSessionBtn').addEventListener('click',()=>{closeMenus();clearSession();});
+  document.getElementById('exportPdfBtn').addEventListener('click',()=>{closeMenus();toast('Use your browser print dialog and choose Save as PDF.');setTimeout(printReport,250);});
+  document.getElementById('printBtn').addEventListener('click',()=>{closeMenus();printReport();});
+  document.getElementById('exportCsvBtn').addEventListener('click',()=>{closeMenus();download(`${sanitizeFilename(state.project.name)}_profit_scenarios.csv`,buildCSV(),'text/csv;charset=utf-8');toast('CSV exported.');});
+  document.getElementById('copySummaryBtn').addEventListener('click',()=>{closeMenus();copySummary();});
+  document.getElementById('emailBtn').addEventListener('click',()=>{closeMenus();openModal(els.emailModal);});
+  document.getElementById('sendEmailBtn').addEventListener('click',sendEmail);
+
+  document.getElementById('copyScenarioBtn').addEventListener('click',()=>{
+    els.copyTarget.innerHTML=state.scenarios.map((s,i)=>i===activeScenario?'':`<option value="${i}">Scenario ${i+1}: ${esc(s.name)}</option>`).join('');openModal(els.copyScenarioModal);
+  });
+  document.getElementById('confirmCopyScenario').addEventListener('click',()=>{
+    const target=Number(els.copyTarget.value);if(!Number.isInteger(target)||target===activeScenario)return;const copy=JSON.parse(JSON.stringify(currentScenario()));copy.name=state.scenarios[target].name;state.scenarios[target]=copy;markDirty();closeModal(els.copyScenarioModal);renderScenarioTabs();toast(`Copied into Scenario ${target+1}.`);
+  });
+  document.querySelectorAll('[data-close-modal]').forEach(b=>b.addEventListener('click',()=>closeModal(b.closest('.modal-backdrop'))));
+  document.querySelectorAll('.modal-backdrop').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModal(m)}));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeMenus();document.querySelectorAll('.modal-backdrop.open').forEach(closeModal);}});
+  window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
+
+  restoreSession();
+  renderAll();
+})();
+</script>
+</body>
+</html>
